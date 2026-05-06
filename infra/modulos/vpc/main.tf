@@ -8,17 +8,19 @@ resource "aws_vpc" "main" {
 
 # 2. Subredes Públicas (10.0.1.0/24 y 10.0.2.0/24)
 resource "aws_subnet" "public_a" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
-  tags              = { Name = "public-a-${terraform.workspace}" }
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "us-east-1a"
+  map_public_ip_on_launch = true
+  tags                    = { Name = "public-a-${terraform.workspace}" }
 }
 
 resource "aws_subnet" "public_b" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1b"
-  tags              = { Name = "public-b-${terraform.workspace}" }
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "us-east-1b"
+  map_public_ip_on_launch = true
+  tags                    = { Name = "public-b-${terraform.workspace}" }
 }
 
 # 3. Subredes Privadas (10.0.11.0/24 y 10.0.12.0/24)
