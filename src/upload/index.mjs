@@ -5,9 +5,21 @@ const BUCKET_NAME = process.env.BUCKET_NAME;
 
 export const handler = async (event) => {
     try {
-        const body = JSON.parse(event.body);
-        const imageBuffer = Buffer.from(body.image, 'base64');
-        const fileName = `raw/${Date.now()}.jpg`;
+        console.log("Evento recibido:", JSON.stringify(event));
+
+        let imageBuffer;
+        if (event.isBase64Encoded) {
+            imageBuffer = Buffer.from(event.body, 'base64');
+        } else {
+            try {
+                const body = JSON.parse(event.body);
+                imageBuffer = Buffer.from(body.image, 'base64');
+            } catch (e) {
+                imageBuffer = Buffer.from(event.body);
+            }
+        }
+
+        const fileName = `uploads/${Date.now()}.jpg`;
 
         await s3.send(new PutObjectCommand({
             Bucket: BUCKET_NAME,
@@ -18,10 +30,21 @@ export const handler = async (event) => {
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Imagen subida con éxito", key: fileName })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                message: "¡Imagen subida con éxito!", 
+                key: fileName,
+                bucket: BUCKET_NAME 
+            })
         };
     } catch (error) {
-        console.error(error);
-        return { statusCode: 500, body: JSON.stringify({ error: "Error al subir imagen" }) };
+        console.error("DETALLE DEL ERROR:", error);
+        return { 
+            statusCode: 500, 
+            body: JSON.stringify({ 
+                error: "Error al subir imagen", 
+                details: error.message 
+            }) 
+        };
     }
 };

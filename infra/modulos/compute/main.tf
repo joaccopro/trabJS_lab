@@ -1,9 +1,13 @@
+
 # VARIABLES
+
 
 variable "private_subnets" { type = list(string) }
 variable "lambda_sg_id"    { type = string }
 
+
 # EMPAQUETADO DEL CÓDIGO (ZIPs)
+
 
 data "archive_file" "upload_zip" {
   type        = "zip"
@@ -16,6 +20,7 @@ data "archive_file" "crop_zip" {
   source_file = "${path.root}/../src/crop/index.mjs"
   output_path = "${path.module}/crop.zip"
 }
+
 
 # ROLES Y POLÍTICAS (IAM)
 
@@ -80,7 +85,7 @@ resource "aws_iam_role_policy" "crop_policy" {
   })
 }
 
-# Permiso básico para Logs
+# Permiso básico para Logs (CloudWatch)
 resource "aws_iam_role_policy_attachment" "upload_logs_base" {
   role       = aws_iam_role.upload_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
@@ -91,6 +96,16 @@ resource "aws_iam_role_policy_attachment" "crop_logs_base" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# Permisos para que las Lambdas entren a la VPC 
+resource "aws_iam_role_policy_attachment" "upload_vpc_access" {
+  role       = aws_iam_role.upload_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "crop_vpc_access" {
+  role       = aws_iam_role.crop_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
 
 # FUNCIONES LAMBDA
 
@@ -102,7 +117,6 @@ resource "aws_lambda_function" "upload" {
   memory_size   = 256
   timeout       = 30
 
-  # Conexión al ZIP
   filename         = data.archive_file.upload_zip.output_path
   source_code_hash = data.archive_file.upload_zip.output_base64sha256
 
@@ -126,7 +140,6 @@ resource "aws_lambda_function" "crop" {
   memory_size   = 512
   timeout       = 60
 
-  # Conexión al ZIP
   filename         = data.archive_file.crop_zip.output_path
   source_code_hash = data.archive_file.crop_zip.output_base64sha256
 
@@ -147,7 +160,6 @@ resource "aws_cloudwatch_log_group" "crop_logs" {
   name              = "/aws/lambda/crop-lambda"
   retention_in_days = 14
 }
-
 
 # OUTPUTS
 
