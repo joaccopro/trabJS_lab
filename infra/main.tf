@@ -7,11 +7,18 @@ module "storage" {
 }
 
 module "compute" {
-  source = "./modulos/compute"
+  source          = "./modulos/compute"
+  private_subnets = module.vpc.private_subnets # Conexión mágica
+  lambda_sg_id    = module.vpc.lambda_sg_id    # Conexión mágica
 }
 
 module "api" {
   source                   = "./modulos/api"
   upload_lambda_invoke_arn = module.compute.upload_lambda_invoke_arn
   upload_lambda_name       = module.compute.upload_lambda_name
+}
+
+output "url_final_del_api" {
+  description = "La URL para enviar tus imágenes"
+  value       = module.api.api_url
 }
