@@ -7,7 +7,9 @@ module "storage" {
 }
 
 module "compute" {
-  source = "./modulos/compute"
+  source          = "./modulos/compute"
+  private_subnets = module.vpc.private_subnets # Conexión mágica
+  lambda_sg_id    = module.vpc.lambda_sg_id    # Conexión mágica
 }
 
 module "api" {
